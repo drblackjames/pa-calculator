@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PA Fast-Track Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .header h2 {
+            color: #1a73e8;
+            margin: 0 0 10px 0;
+            font-size: 22px;
+        }
+        .header p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 5px rgba(26, 115, 232, 0.3);
+        }
+        .btn-calculate {
+            width: 100%;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-calculate:hover {
+            background-color: #1557b0;
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+        .result-prob {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .result-recommendation {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .bg-danger { background-color: #ffebee; border: 1px solid #ffcdd2; color: #c62828; }
+        .bg-warning { background-color: #fff8e1; border: 1px solid #ffecb3; color: #f57f17; }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Công cụ dự báo Test Muối (PA Fast-Track)</h2>
+        <p>Khoa Nội tiết - Bệnh viện Nhân dân 115</p>
+    </div>
+
+    <div class="form-group">
+        <label for="kali">Kali máu tối thiểu (mmol/L)</label>
+        <input type="number" id="kali" step="0.01" placeholder="Ví dụ: 2.50">
+    </div>
+
+    <div class="form-group">
+        <label for="aldo">Aldosterone nền - PAC (ng/dL)</label>
+        <input type="number" id="aldo" step="0.01" placeholder="Ví dụ: 18.5">
+    </div>
+
+    <div class="form-group">
+        <label for="renin">Renin trực tiếp - DRC (ng/L)</label>
+        <input type="number" id="renin" step="0.01" placeholder="Ví dụ: 0.80">
+    </div>
+
+    <button class="btn-calculate" onclick="calculatePA()">Phân tích kết quả</button>
+
+    <div id="resultBox" class="result-box">
+        <div style="font-size: 14px;">Xác suất dương tính Test Muối:</div>
+        <div id="probValue" class="result-prob"></div>
+        <div id="arrValue" style="font-size: 13px; margin-bottom: 15px; color: #555;"></div>
+        <div id="recommendationText" class="result-recommendation"></div>
+    </div>
+
+    <div class="footer">
+        Được phát triển dựa trên mô hình Hồi quy Logistic hồi cứu.<br>
+        BSCKII. Mai Trọng Trí © 2026
+    </div>
+</div>
+
+<script>
+    function calculatePA() {
+        // Lấy giá trị đầu vào
+        const kali = parseFloat(document.getElementById('kali').value);
+        const aldo = parseFloat(document.getElementById('aldo').value);
+        const renin = parseFloat(document.getElementById('renin').value);
+
+        // Kiểm tra lỗi nhập liệu
+        if (isNaN(kali) || isNaN(aldo) || isNaN(renin) || renin <= 0) {
+            alert("Vui lòng nhập đầy đủ và chính xác các thông số!");
+            return;
+        }
+
+        // Tính tỷ số ARR
+        const arr = aldo / renin;
+
+        // Áp dụng phương trình Hồi quy Logistic từ Stata
+        // Logit = 10.5147 + 0.0256*ARR - 3.2497*Kali_min
+        const logit = 10.5147 + (0.0256 * arr) - (3.2497 * kali);
+        
+        // Tính xác suất P
+        const prob = 1 / (1 + Math.exp(-logit));
+        const probPercent = (prob * 100).toFixed(1);
+
+        // Hiển thị kết quả
+        const resultBox = document.getElementById('resultBox');
+        const probValue = document.getElementById('probValue');
+        const arrValue = document.getElementById('arrValue');
+        const recText = document.getElementById('recommendationText');
+
+        resultBox.style.display = 'block';
+        probValue.innerText = probPercent + "%";
+        arrValue.innerText = `Tỷ số ARR hiện tại: ${arr.toFixed(2)}`;
+
+        // Phân loại dựa trên ngưỡng cắt (cut-off) an toàn là xác suất > 89% (Độ đặc hiệu 100%)
+        if (prob >= 0.89) {
+            resultBox.className = "result-box bg-danger";
+            recText.innerText = "NGUY CƠ RẤT CAO. Khuyến cáo: Bệnh nhân thỏa mãn tiêu chuẩn chẩn đoán (Độ đặc hiệu 100%). Cân nhắc MIỄN TEST TRUYỀN MUỐI và tiến hành chụp cắt lớp (CT).";
+        } else {
+            resultBox.className = "result-box bg-warning";
+            recText.innerText = "VÙNG XÁM. Khuyến cáo: Các chỉ số ban đầu chưa đủ để khẳng định chắc chắn. Bắt buộc thực hiện NGHIỆM PHÁP TRUYỀN NƯỚC MUỐI sinh lý để chẩn đoán xác định.";
+        }
+    }
+</script>
+
+</body>
+</html>
